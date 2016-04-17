@@ -1,0 +1,7 @@
+target/
+js/
+**/\#*\#
+.#*
+build-docker.sh
+figwheel_server.log
+out/
