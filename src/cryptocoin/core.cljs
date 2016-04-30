@@ -2,16 +2,19 @@
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [cljsjs.bootstrap]))
+            [cljsjs.bootstrap]
+            [cryptocoin.table :as table]))
 
-(defui Cryptocoin
-  Object
-  (render [this]
-    (dom/div nil "Cryptocoin")))
+(def markets (atom  {:hdgs ["Currency" "% Change"]
+                     :rows     [["BTC" 0.01] 
+                                ["ETH" 0.12]
+                                ["GBP" 0.11]]}))
 
-(def cryptocoin (om/factory Cryptocoin))
+(def reconciler
+  (om/reconciler {:state markets}))
 
-(js/ReactDOM.render (cryptocoin) (gdom/getElement "app"))
+(om/add-root! reconciler
+  table/TableCondensed (gdom/getElement "app"))
 
 ;;
 ;; TODO:
