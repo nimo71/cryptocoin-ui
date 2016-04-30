@@ -10,8 +10,18 @@
                                 ["ETH" 0.12]
                                 ["GBP" 0.11]]}))
 
+(defn read [{:keys [state] :as env} key params]
+  (let [st @state]
+    (if-let [[_ value] (find st key)]
+      {:value value}
+      {:value "not-found"})))
+
+;(defn mutate [{:keys [state] :as env} key params])
+
 (def reconciler
-  (om/reconciler {:state markets}))
+  (om/reconciler 
+    {:state markets
+     :parser (om/parser {:read read})}))
 
 (om/add-root! reconciler
   table/TableCondensed (gdom/getElement "app"))
