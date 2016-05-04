@@ -8,9 +8,13 @@
   ;;            [b1 b2 ... bn]
   ;;            [c1 c2 ... cn]]}"
 (defui TableCondensed
+  static om/IQuery
+  (query [this] [:table])
   Object
   (render [this]
-    (let [{:keys [hdgs rows]} (om/props this)]
+    (let [{:keys [table]} (om/props this)
+          hdgs            (:hdgs table)
+          rows            (:rows table)]
       (dom/div #js {:className "col-md-12"}
         (dom/table #js {:className "table table-condensed"}
           (dom/thead nil
@@ -18,9 +22,9 @@
               (map #(dom/th nil %) hdgs)))
           (dom/tbody nil
             (map 
-             (fn [row] 
-               (dom/tr nil 
-                 (map (fn [col] (dom/td nil col)) row))) 
-             rows)))))))
+              (fn [row] 
+                (dom/tr nil 
+                  (map (fn [col] (dom/td nil col)) row))) 
+              (vals rows))))))))
 
 (def table-condensed (om/factory TableCondensed))

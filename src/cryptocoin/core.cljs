@@ -1,14 +1,18 @@
 (ns cryptocoin.core
+  (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [cljsjs.bootstrap]
-            [cryptocoin.table :as table]))
+            [cljsjs.autobahn]
+            [cryptocoin.table :as table]
+            [cryptocoin.poloniex :as poloniex]
+            [cljs.core.async :refer [<!]]))
 
-(def markets (atom  {:hdgs ["Currency" "% Change"]
-                     :rows     [["BTC" 0.01] 
-                                ["ETH" 0.12]
-                                ["GBP" 0.11]]}))
+(enable-console-print!)
+
+(def markets (atom  {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "Is Frozen" "24hr High" "24hr Low"]
+                             :rows {}}}))
 
 (defn read [{:keys [state] :as env} key params]
   (let [st @state]
@@ -16,17 +20,37 @@
       {:value value}
       {:value "not-found"})))
 
-;(defn mutate [{:keys [state] :as env} key params])
+(defn mutate [{:keys [state] :as env} key params]
+  (println "mutate, key: " key ", params: " params)
+  (if (= :table key)
+    {:value {:keys [:rows]}
+     :action #(swap! state assoc-in [:table :rows (key params)] (vals params))}
+    {:value :not-found}))
+
+(defn merge-market [state market] 
+  (let [currency-pair   (get market "currencyPair")
+        currency-values (map market ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "isFrozen" "24hrHigh" "24hrLow"])]
+    (assoc-in state [:table :rows currency-pair] (vec currency-values))))
 
 (def reconciler
   (om/reconciler 
     {:state markets
-     :parser (om/parser {:read read})}))
+     :parser (om/parser {:read read :mutate mutate})
+     :merge-tree merge-market}))
 
 (om/add-root! reconciler
   table/TableCondensed (gdom/getElement "app"))
 
-;;
+(defn update-market [market]
+  (om/merge! reconciler market)
+  (om/force-root-render! reconciler))
+
+(let [ticker-chan (poloniex/start)]
+  (go-loop [market (<! ticker-chan)]
+    (update-market market)
+    (recur (<! ticker-chan))))
+
+
 ;; TODO:
 ;; -  Manage css using sass or equivalent
 ;; 
