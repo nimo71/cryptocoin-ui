@@ -11,7 +11,7 @@
 
 (enable-console-print!)
 
-(def markets (atom  {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "Is Frozen" "24hr High" "24hr Low"]
+(def markets (atom  {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "24hr High" "24hr Low"]
                              :rows {}}}))
 
 (defn read [{:keys [state] :as env} key params]
@@ -28,9 +28,10 @@
     {:value :not-found}))
 
 (defn merge-market [state market] 
-  (let [currency-pair   (get market "currencyPair")
-        currency-values (map market ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "isFrozen" "24hrHigh" "24hrLow"])]
-    (assoc-in state [:table :rows currency-pair] (vec currency-values))))
+  (when (not= 1 (get "isFrozen" market))
+    (let  [currency-pair     (get market "currencyPair")
+           currency-values   (map market ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "24hrHigh" "24hrLow"])]
+      (assoc-in state [:table :rows currency-pair] (vec currency-values)))))
 
 (def reconciler
   (om/reconciler 
