@@ -7,7 +7,7 @@
   ;;     :rows [[a1 a2 ... an]
   ;;            [b1 b2 ... bn]
   ;;            [c1 c2 ... cn]]}"
-(defui TableCondensed
+(defui MarketTable
   static om/IQuery
   (query [this] [:table])
   Object
@@ -22,9 +22,9 @@
               (map #(dom/th nil %) hdgs)))
           (dom/tbody nil
             (map 
-              (fn [row] 
-                (dom/tr nil 
-                  (map (fn [col] (dom/td nil col)) row))) 
+              (fn [row]  
+                (dom/tr (if (:isFrozen row) #js {:className "text-muted"} nil) 
+                        (map (fn [col] (dom/td nil col)) (:market-values row)))) 
               (vals rows))))))))
 
-(def table-condensed (om/factory TableCondensed))
+(def market-table (om/factory MarketTable))

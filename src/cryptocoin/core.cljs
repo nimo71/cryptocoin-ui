@@ -28,10 +28,12 @@
     {:value :not-found}))
 
 (defn merge-market [state market] 
-  (when (not= 1 (get "isFrozen" market))
-    (let  [currency-pair     (get market "currencyPair")
-           currency-values   (map market ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "24hrHigh" "24hrLow"])]
-      (assoc-in state [:table :rows currency-pair] (vec currency-values)))))
+  (let  [currency-pair   (get market "currencyPair")
+         currency-values (map market ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "24hrHigh" "24hrLow"])
+         frozen?         (= 1 (get market "isFrozen"))]
+    (assoc-in state 
+              [:table :rows currency-pair] 
+              {:isFrozen frozen? :market-values (vec currency-values)})))
 
 (def reconciler
   (om/reconciler 
@@ -40,7 +42,7 @@
      :merge-tree merge-market}))
 
 (om/add-root! reconciler
-  table/TableCondensed (gdom/getElement "app"))
+  table/MarketTable (gdom/getElement "app"))
 
 (defn update-market [market]
   (om/merge! reconciler market)

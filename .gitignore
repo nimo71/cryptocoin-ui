@@ -8,3 +8,5 @@ out/
 .DS_Store
 cryptocoin-ui-0.0.1.docker
 cryptocoin-ui-0.0.1.docker.tgz
+*.docker
+*.docker.tgz
