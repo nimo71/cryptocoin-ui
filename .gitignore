@@ -6,7 +6,7 @@ build-docker.sh
 figwheel_server.log
 out/
 .DS_Store
-cryptocoin-ui-0.0.1.docker
-cryptocoin-ui-0.0.1.docker.tgz
+cryptoquants-ui-0.0.1.docker
+cryptoquants-ui-0.0.1.docker.tgz
 *.docker
 *.docker.tgz

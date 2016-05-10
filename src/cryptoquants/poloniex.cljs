@@ -1,4 +1,4 @@
-(ns cryptocoin.poloniex
+(ns cryptoquants.poloniex
   (:require [cljsjs.autobahn]
             [cljs.core.async :refer [put! chan]]))
 

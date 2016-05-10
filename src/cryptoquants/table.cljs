@@ -1,4 +1,4 @@
-(ns cryptocoin.table
+(ns cryptoquants.table
   (:require [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]))
 
@@ -16,7 +16,7 @@
           hdgs            (:hdgs table)
           rows            (:rows table)]
       (dom/div #js {:className "col-md-12"}
-        (dom/table #js {:className "table table-condensed"}
+        (dom/table #js {:className "table table-condensed table-striped"}
           (dom/thead nil
             (dom/tr nil
               (map #(dom/th nil %) hdgs)))

@@ -1,12 +1,12 @@
-(ns cryptocoin.core
+(ns cryptoquants.core
   (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [cljsjs.bootstrap]
             [cljsjs.autobahn]
-            [cryptocoin.table :as table]
-            [cryptocoin.poloniex :as poloniex]
+            [cryptoquants.table :as table]
+            [cryptoquants.poloniex :as poloniex]
             [cljs.core.async :refer [<!]]))
 
 (enable-console-print!)
