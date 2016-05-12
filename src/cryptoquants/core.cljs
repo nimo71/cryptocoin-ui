@@ -11,12 +11,12 @@
 
 (enable-console-print!)
 
-(def markets (atom {:app/route '[:app/markets _]
+(def markets (atom {:app/route   '[:app/markets _]
                     :app/markets {:markets/title "Poloniex Markets"
                                   :markets/content {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "24hr High" "24hr Low"]
                                                             :rows {}}}}
-                    :app/about {:about/title "About CryptoQuants"
-                                :about/content "Some blurb about CryptoQuants"}}))
+                    :app/about   {:about/title "About CryptoQuants"
+                                  :about/content "Some blurb about CryptoQuants"}}))
 
 (defui Markets
   static om/IQuery
@@ -60,28 +60,28 @@
                     (map om/get-query (vals route->component)))}])
   Object
   (render [this]
-    (dom/div nil 
-      (dom/nav #js {:id "nav" :className "navbar navbar-inverse navbar-fixed-top"}
-        (dom/div #js {:className "container"}
-          (dom/div #js {:className "navbar-header"}
-            (dom/button #js {:type "button" :className "navbar-toggle collapsed" 
-                             :data-toggle "collapse" :data-target "#navbar" 
-                             :aria-expanded "false" :aria-controls "navbar"}
-              (dom/span #js {:className "sr-only"} "Toggle navigation")
-              (dom/span #js {:className "icon-bar"})
-              (dom/span #js {:className "icon-bar"})
-              (dom/span #js {:className "icon-bar"}))
-            (dom/a #js {:className "navbar-brand" :href "#"} "CryptoQuants"))
-          (dom/div #js {:id "navbar" :className "navbar-collapse collapse"}
-            (dom/ul #js {:className "nav navbar-nav"}
-              (dom/li #js {:className "active"} 
-                (dom/a #js {:href "#"
-                            :onClick #(change-route this '[:app/markets _] %)} "Markets"))
-              (dom/li nil 
-                (dom/a #js {:href "#about"
-                            :onClick #(change-route this '[:app/about _] %)} "About"))))))
-      (let [{:keys [app/route route/data]} (om/props this)]
-        ((route->factory (first route)) data)))))
+    (let [{:keys [app/route route/data]} (om/props this)]
+      (dom/div nil 
+        (dom/nav #js {:id "nav" :className "navbar navbar-inverse navbar-fixed-top"}
+          (dom/div #js {:className "container"}
+            (dom/div #js {:className "navbar-header"}
+              (dom/button #js {:type "button" :className "navbar-toggle collapsed" 
+                              :data-toggle "collapse" :data-target "#navbar" 
+                              :aria-expanded "false" :aria-controls "navbar"}
+                (dom/span #js {:className "sr-only"} "Toggle navigation")
+                (dom/span #js {:className "icon-bar"})
+                (dom/span #js {:className "icon-bar"})
+                (dom/span #js {:className "icon-bar"}))
+              (dom/a #js {:className "navbar-brand" :href "#"} "CryptoQuants"))
+            (dom/div #js {:id "navbar" :className "navbar-collapse collapse"}
+              (dom/ul #js {:className "nav navbar-nav"}
+                (dom/li #js {:className (when (= (first route) :app/markets) "active")} 
+                  (dom/a #js {:href "#"
+                              :onClick #(change-route this '[:app/markets _] %)} "Markets"))
+                (dom/li  #js {:className (when (= (first route) :app/about) "active")} 
+                  (dom/a #js {:href "#about"
+                              :onClick #(change-route this '[:app/about _] %)} "About"))))))
+       ((route->factory (first route)) data)))))
 
 (defmulti read om/dispatch)
 (defmulti mutate om/dispatch)
