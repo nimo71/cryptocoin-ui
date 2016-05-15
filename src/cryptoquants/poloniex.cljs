@@ -17,8 +17,7 @@
                          (let [tick-labels ["currencyPair" "last" "lowestAsk" "highestBid" "percentChange" "baseVolume" "quoteVolume" "isFrozen" "24hrHigh" "24hrLow"]
                                tick-event (zipmap tick-labels args)]
                            (put! ticker-chan tick-event)))]
-      (.subscribe session "ticker" ticker-event)
-)))
+      (.subscribe session "ticker" ticker-event))))
 
 (def conn-closed
   (fn [] (println "Websocket connection closed")))
@@ -27,7 +26,8 @@
   (println "Starting poloniex ticker feed...")
   (set! (.-onopen conn) conn-opened)
   (set! (.-onclose conn) conn-closed)
-  (.open conn)
+  (when (not (.-isOpen conn))
+    (.open conn))
   ticker-chan)
 
 (defn stop []
