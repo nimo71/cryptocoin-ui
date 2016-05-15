@@ -1,72 +1,24 @@
 (ns cryptoquants.core
-  (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [cljsjs.bootstrap]
-            [cljsjs.autobahn]
-            [cryptoquants.table :as table]
-            [cryptoquants.poloniex :as poloniex]
-            [cljs.core.async :refer [chan put! alts! close!]]))
+            [cryptoquants.markets :as markets]
+            [cryptoquants.about :as about]))
 
 (enable-console-print!)
 
-(def markets (atom {:app/route   '[:app/markets _]
-                    :app/markets {:markets/title "Poloniex Markets"
-                                  :markets/content {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "24hr High" "24hr Low"]
-                                                            :rows {}}}}
-                    :app/about   {:about/title "About CryptoQuants"
-                                  :about/content "Some blurb about CryptoQuants"}}))
-
-(declare reconciler)
-
-(defui Markets
-  static om/IQuery
-  (query [this]
-    [:markets/title :markets/content])
-  Object
-  (componentWillMount [this]
-    (println "componentWillMount: Markets")
-    (let [ticker-chan (poloniex/start)
-          kill-chan   (chan)]
-      (om/set-state! this {:kill-chan kill-chan})
-      (go-loop [[market c] (alts! [ticker-chan kill-chan])]
-        (if (not= c kill-chan)
-          (do 
-            (om/merge! reconciler market)
-            (om/force-root-render! reconciler)
-            (recur (alts! [ticker-chan kill-chan])))
-          (do
-            (poloniex/stop)
-            (close! kill-chan))))))
-  
-  (componentWillUnmount [this]
-    (let [kill-chan (:kill-chan (om/get-state this))
-          {:keys [markets/content]} (om/props this)]
-      (put! kill-chan :quit)
-      (swap! markets assoc-in [:app/markets :markets/content :table :rows] {})))
-
-  (render [this]
-    (let [{:keys [markets/title markets/content]} (om/props this)]
-      (dom/div #js {:className "col-md-12"}
-        (dom/h1 nil title)
-        (table/market-table content)))))
-
-(defui About
-  static om/IQuery
-  (query [this]
-    [:about/title :about/content])
-  Object
-  (render [this]
-    (let [{:keys [about/title about/content]} (om/props this)]
-      (dom/div #js {:className "col-md-12"}
-        (dom/h1 nil title)
-        (dom/p nil content)))))
-
+(def app-state (atom {
+                      :app/route   '[:app/markets _]
+                      :app/markets {:markets/title "Poloniex Markets"
+                                    :markets/content {:table {:hdgs ["Currency Pair" "Last" "Lowest Ask" "Highest Bid" "% Change" "Base Volume" "Quote Volume" "24hr High" "24hr Low"]
+                                                              :rows {}}}}
+                      :app/about   {:about/title "About CryptoQuants"
+                                    :about/content "Some blurb about CryptoQuants"}}))
 
 (def route->component
-  {:app/markets Markets
-   :app/about About})
+  {:app/markets markets/Markets
+   :app/about about/About})
 
 (def route->factory
   (zipmap (keys route->component)
@@ -140,21 +92,10 @@
 
 (def reconciler
   (om/reconciler 
-    {:state markets
+    {:state app-state
      :parser (om/parser {:read read :mutate mutate})
      :merge-tree merge-market}))
 
 (om/add-root! reconciler
   Root (gdom/getElement "app"))
-
-
-;; (defn update-market [market]
-;;   (om/merge! reconciler market)
-;;  (om/force-root-render! reconciler))
-
-
-;; (let [ticker-chan (poloniex/start)]
-;;   (go-loop [market (<! ticker-chan)]
-;;     (update-market market)
-;;     (recur (<! ticker-chan))))
 
