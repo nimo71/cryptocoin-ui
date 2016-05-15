@@ -29,3 +29,9 @@
   (set! (.-onclose conn) conn-closed)
   (.open conn)
   ticker-chan)
+
+(defn stop []
+  (println "Stopping poloinex ticker feed...")
+  (.close conn))
+
+;; should the ticker chan be closed? 

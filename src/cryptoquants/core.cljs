@@ -7,7 +7,7 @@
             [cljsjs.autobahn]
             [cryptoquants.table :as table]
             [cryptoquants.poloniex :as poloniex]
-            [cljs.core.async :refer [<!]]))
+            [cljs.core.async :refer [chan put! alts! close!]]))
 
 (enable-console-print!)
 
@@ -18,11 +18,34 @@
                     :app/about   {:about/title "About CryptoQuants"
                                   :about/content "Some blurb about CryptoQuants"}}))
 
+(declare reconciler)
+
 (defui Markets
   static om/IQuery
   (query [this]
     [:markets/title :markets/content])
   Object
+  (componentWillMount [this]
+    (println "componentWillMount: Markets")
+    (let [ticker-chan (poloniex/start)
+          kill-chan   (chan)]
+      (om/set-state! this {:kill-chan kill-chan})
+      (go-loop [[market c] (alts! [ticker-chan kill-chan])]
+        (if (not= c kill-chan)
+          (do 
+            (om/merge! reconciler market)
+            (om/force-root-render! reconciler)
+            (recur (alts! [ticker-chan kill-chan])))
+          (do
+            (poloniex/stop)
+            (close! kill-chan))))))
+  
+  (componentWillUnmount [this]
+    (let [kill-chan (:kill-chan (om/get-state this))
+          {:keys [markets/content]} (om/props this)]
+      (put! kill-chan :quit)
+      (swap! markets assoc-in [:app/markets :markets/content :table :rows] {})))
+
   (render [this]
     (let [{:keys [markets/title markets/content]} (om/props this)]
       (dom/div #js {:className "col-md-12"}
@@ -39,6 +62,7 @@
       (dom/div #js {:className "col-md-12"}
         (dom/h1 nil title)
         (dom/p nil content)))))
+
 
 (def route->component
   {:app/markets Markets
@@ -78,7 +102,7 @@
                 (dom/li #js {:className (when (= (first route) :app/markets) "active")} 
                   (dom/a #js {:href "#"
                               :onClick #(change-route this '[:app/markets _] %)} "Markets"))
-                (dom/li  #js {:className (when (= (first route) :app/about) "active")} 
+                (dom/li #js {:className (when (= (first route) :app/about) "active")} 
                   (dom/a #js {:href "#about"
                               :onClick #(change-route this '[:app/about _] %)} "About"))))))
        ((route->factory (first route)) data)))))
@@ -123,12 +147,14 @@
 (om/add-root! reconciler
   Root (gdom/getElement "app"))
 
-(defn update-market [market]
-  (om/merge! reconciler market)
-  (om/force-root-render! reconciler))
 
-(let [ticker-chan (poloniex/start)]
-  (go-loop [market (<! ticker-chan)]
-    (update-market market)
-    (recur (<! ticker-chan))))
+;; (defn update-market [market]
+;;   (om/merge! reconciler market)
+;;  (om/force-root-render! reconciler))
+
+
+;; (let [ticker-chan (poloniex/start)]
+;;   (go-loop [market (<! ticker-chan)]
+;;     (update-market market)
+;;     (recur (<! ticker-chan))))
 
